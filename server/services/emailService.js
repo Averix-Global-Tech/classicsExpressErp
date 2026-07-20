@@ -57,6 +57,11 @@ async function getTransporter() {
     secure,
     auth: { user, pass },
     tls: { rejectUnauthorized: config.isProd },
+    // Bound the SMTP handshake so a slow/blocked connection fails fast
+    // instead of hanging past the frontend's request timeout.
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 8000,
   });
 
   return _transporter;
