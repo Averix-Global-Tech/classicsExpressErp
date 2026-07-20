@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DARK-MODE CONTRACT
+   Strategy : darkMode: 'class'  (see tailwind.config.js)
+   Toggle   : ThemeContext adds/removes `dark` on <html>
+   Storage  : localStorage key "theme" ("light" | "dark")
+   Default  : light mode
+
+   Page authors: prefer the CSS var tokens below (--surface, --fg, --border…)
+   over hardcoded slate/zinc values in new code — dark mode works automatically.
+══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light theme ─────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+  --surface:        #f8fafc;
+  --surface-card:   #ffffff;
+  --surface-input:  #ffffff;
+  --surface-hover:  #f1f5f9;
+  --border:         #e2e8f0;
+  --border-strong:  #cbd5e1;
+  --fg:             #0f172a;
+  --fg-muted:       #475569;
+  --fg-subtle:      #94a3b8;
+  --orange-ring:     rgba(249, 115, 22, 0.20); /* orange-500 */
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────────────── */
+.dark {
+  color-scheme: dark;
+  --surface:        #171717; /* neutral-900 */
+  --surface-card:   #262626; /* neutral-800 */
+  --surface-input:  #262626;
+  --surface-hover:  #404040; /* neutral-700 */
+  --border:         #404040;
+  --border-strong:  #525252; /* neutral-600 */
+  --fg:             #f5f5f5; /* neutral-100 */
+  --fg-muted:       #a3a3a3; /* neutral-400 */
+  --fg-subtle:      #737373; /* neutral-500 */
+  --orange-ring:     rgba(249, 115, 22, 0.35);
+}
+
+/* ── Base reset ──────────────────────────────────────────────────────────── */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--fg);
+  @apply antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Scrollbar — slim, premium ───────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--fg-subtle); }
+
+/* ── Component layer ─────────────────────────────────────────────────────── */
+@layer components {
+
+  /* Card surface */
+  .card {
+    background-color: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 6px -1px rgb(0 0 0 / 0.06);
+  }
+  .card-elevated {
+    background-color: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.12), 0 4px 8px -4px rgb(0 0 0 / 0.08);
+  }
+
+  /* Form field base — all inputs/selects/textareas inherit this */
+  .input-base {
+    background-color: var(--surface-input);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    @apply w-full px-3 py-2 text-sm outline-none;
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    @apply placeholder:opacity-40;
+  }
+  .input-base::placeholder {
+    color: var(--fg-subtle);
+  }
+  .input-base:focus {
+    border-color: #f97316; /* orange-500 */
+    box-shadow: 0 0 0 3px var(--orange-ring);
+  }
+  .input-base:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+
+
+  /* Shimmer skeleton */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--surface-hover) 25%,
+      var(--border) 50%,
+      var(--surface-hover) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+    border-radius: 0.375rem;
+  }
+}
+
+/* ── Hide number input spinners ─────────────────────────────────────────── */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

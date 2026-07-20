@@ -1,0 +1,37 @@
+{
+  "name": "classic-express-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Classic Express International Courier — ERP API",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "seed": "node seeds/seedAdmin.js",
+    "lint": "eslint . --ext .js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "classical-express-erp": "file:..",
+    "cloudinary": "^2.5.1",
+    "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb-memory-server": "^11.2.0",
+    "mongoose": "^8.8.4",
+    "morgan": "^1.10.0",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.16.0",
+    "nodemon": "^3.1.7"
+  }
+}
