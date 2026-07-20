@@ -10,6 +10,7 @@
  * SECURITY: Never log plain-text passwords here.
  */
 const nodemailer = require('nodemailer');
+const dns = require('dns').promises;
 const config = require('../config/env');
 const logger = require('../utils/logger');
 const { welcomeEmailHtml, welcomeEmailText, resetPasswordHtml, resetPasswordText } = require('./emailTemplates');
@@ -51,8 +52,23 @@ async function getTransporter() {
   }
 
   // ── Production SMTP ─────────────────────────────────────────────────────────
+  // Nodemailer resolves both A and AAAA records for the host and picks a
+  // random address between them — on hosts with no outbound IPv6 route
+  // (e.g. Railway) that randomly fails with ENETUNREACH about half the time.
+  // Resolving IPv4 ourselves and connecting to the literal address sidesteps
+  // Nodemailer's own DNS step entirely; `servername` keeps TLS/SNI validating
+  // against the real hostname's certificate.
+  let connectHost = host;
+  try {
+    const addresses = await dns.resolve4(host);
+    if (addresses.length) connectHost = addresses[Math.floor(Math.random() * addresses.length)];
+  } catch (err) {
+    logger.warn(`[EmailService] IPv4 resolution for ${host} failed, connecting by hostname: ${err.message}`);
+  }
+
   _transporter = nodemailer.createTransport({
-    host,
+    host: connectHost,
+    servername: host,
     port,
     secure,
     auth: { user, pass },
@@ -62,9 +78,6 @@ async function getTransporter() {
     connectionTimeout: 8000,
     greetingTimeout: 8000,
     socketTimeout: 8000,
-    // Force IPv4 — the hosting network has no IPv6 route, and Gmail's SMTP
-    // host resolves to an IPv6 address by default, causing ENETUNREACH.
-    family: 4,
   });
 
   return _transporter;
