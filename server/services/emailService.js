@@ -27,6 +27,12 @@ async function getTransporter() {
   const { host, port, secure, user, pass, from } = config.smtp;
 
   if (!user || !pass) {
+    if (config.isProd) {
+      throw new Error(
+        'SMTP not configured: set SMTP_HOST, SMTP_USER, SMTP_PASS (and SMTP_PORT/SMTP_SECURE) ' +
+        'in the production environment. Refusing to fall back to the Ethereal test service in production.'
+      );
+    }
     // ── Development fallback: Ethereal fake SMTP ─────────────────────────────
     if (!_etherealAccount) {
       _etherealAccount = await nodemailer.createTestAccount();
