@@ -63,6 +63,8 @@ function CreateEmployeeModal({ open, onClose, onCreated }) {
   const toast = useToast();
   const [emailFailedId, setEmailFailedId] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [tempPassword, setTempPassword] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const {
     register,
@@ -75,7 +77,16 @@ function CreateEmployeeModal({ open, onClose, onCreated }) {
     reset();
     setEmailFailedId(null);
     setPreviewUrl(null);
+    setTempPassword(null);
+    setCopied(false);
     onClose();
+  };
+
+  const handleCopyPassword = async () => {
+    if (!tempPassword) return;
+    await navigator.clipboard.writeText(tempPassword);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const onSubmit = async (values) => {
@@ -84,7 +95,8 @@ function CreateEmployeeModal({ open, onClose, onCreated }) {
       if (result.emailPreviewUrl) {
         setPreviewUrl(result.emailPreviewUrl);
       }
-      
+      setTempPassword(result.tempPassword || null);
+
       if (result.emailSent) {
         toast.success(`Employee ${values.name} created! Welcome email sent.`);
       } else {
@@ -92,11 +104,7 @@ function CreateEmployeeModal({ open, onClose, onCreated }) {
         setEmailFailedId(result.employee?._id);
       }
       onCreated?.();
-      
-      // Keep modal open if we need to show the dev preview URL, otherwise close
-      if (!result.emailPreviewUrl) {
-        handleClose();
-      }
+      // Stay open so the admin can copy the temporary password before closing.
     } catch (err) {
       toast.error(err?.message || 'Failed to create employee.');
     }
@@ -108,6 +116,7 @@ function CreateEmployeeModal({ open, onClose, onCreated }) {
       const res = await employeeService.resendEmail(emailFailedId);
       toast.success('Welcome email resent successfully!');
       if (res.emailPreviewUrl) setPreviewUrl(res.emailPreviewUrl);
+      if (res.tempPassword) setTempPassword(res.tempPassword);
       setEmailFailedId(null);
     } catch {
       toast.error('Failed to resend email. Please try again from the employee profile.');
@@ -124,18 +133,42 @@ function CreateEmployeeModal({ open, onClose, onCreated }) {
       footer={
         <>
           <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
-            Cancel
+            {tempPassword ? 'Done' : 'Cancel'}
           </Button>
-          <Button
-            type="submit"
-            form="create-employee-form"
-            loading={isSubmitting}
-          >
-            Create Employee
-          </Button>
+          {!tempPassword && (
+            <Button
+              type="submit"
+              form="create-employee-form"
+              loading={isSubmitting}
+            >
+              Create Employee
+            </Button>
+          )}
         </>
       }
     >
+      {tempPassword && (
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+          <p className="text-sm font-semibold text-blue-800">🔑 Temporary Password</p>
+          <p className="mt-1 text-xs text-blue-600">
+            Email delivery is currently unreliable due to a network issue on the hosting
+            provider. Please copy this password and share it with the employee directly.
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 select-all rounded border border-blue-200 bg-white px-3 py-1.5 text-sm font-mono text-blue-900">
+              {tempPassword}
+            </code>
+            <button
+              type="button"
+              onClick={handleCopyPassword}
+              className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {emailFailedId && (
         <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-sm text-amber-800">Welcome email delivery failed.</p>
@@ -268,7 +301,8 @@ function CreateEmployeeModal({ open, onClose, onCreated }) {
             </p>
             <p className="mt-1 text-xs text-blue-600 dark:text-blue-300">
               A unique Employee ID and a cryptographically secure temporary password will be
-              auto-generated and sent to the employee&apos;s email immediately after creation.
+              auto-generated. We&apos;ll also attempt to email it — if delivery fails, it&apos;ll
+              be shown here for you to share directly.
             </p>
           </div>
         </div>

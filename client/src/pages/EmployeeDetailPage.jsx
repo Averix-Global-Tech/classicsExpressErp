@@ -51,6 +51,8 @@ export default function EmployeeDetailPage() {
   const [resending, setResending] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [tempPassword, setTempPassword] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -70,17 +72,32 @@ export default function EmployeeDetailPage() {
   const handleResend = async () => {
     setResending(true);
     setPreviewUrl(null);
+    setTempPassword(null);
     try {
       const res = await employeeService.resendEmail(id);
-      toast.success('Welcome email resent with a new temporary password.');
+      toast.success(
+        res.emailSent
+          ? 'Welcome email resent with a new temporary password.'
+          : 'New temporary password generated. Email delivery failed — share it directly below.'
+      );
       if (res.emailPreviewUrl) {
         setPreviewUrl(res.emailPreviewUrl);
+      }
+      if (res.tempPassword) {
+        setTempPassword(res.tempPassword);
       }
     } catch (err) {
       toast.error(err?.message || 'Failed to resend email.');
     } finally {
       setResending(false);
     }
+  };
+
+  const handleCopyPassword = async () => {
+    if (!tempPassword) return;
+    await navigator.clipboard.writeText(tempPassword);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleToggleActive = async () => {
@@ -205,6 +222,29 @@ export default function EmployeeDetailPage() {
 
         {/* ── Right: Actions + Security ── */}
         <div className="space-y-6 lg:col-span-2">
+          {/* Temporary Password (shown when email delivery is unreliable) */}
+          {tempPassword && (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-blue-800">🔑 Temporary Password</h3>
+              <p className="mt-1 text-sm text-blue-600">
+                Email delivery is currently unreliable due to a network issue on the hosting
+                provider. Please copy this password and share it with the employee directly.
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <code className="flex-1 select-all rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-mono text-blue-900">
+                  {tempPassword}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopyPassword}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Email Preview Alert (Dev Mode) */}
           {previewUrl && (
             <div className="rounded-2xl border border-orange-200 bg-orange-50 p-6 shadow-sm">

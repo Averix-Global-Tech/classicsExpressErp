@@ -128,7 +128,10 @@ const createEmployee = asyncHandler(async (req, res) => {
     ip: req.ip,
   });
 
-  // 9. Respond — include emailSent flag so the frontend can surface a resend CTA
+  // 9. Respond — include emailSent flag so the frontend can surface a resend CTA.
+  // Also always return the temp password so the admin can hand it to the
+  // employee directly when email delivery is unavailable (e.g. the hosting
+  // provider's outbound network can't currently reach SMTP servers reliably).
   const message = emailSent
     ? 'Employee created successfully. Welcome email has been sent.'
     : 'Employee created successfully, but the welcome email could not be delivered.';
@@ -137,6 +140,7 @@ const createEmployee = asyncHandler(async (req, res) => {
     employee: employee.toJSON(),
     employeeId: employee.employeeId,
     emailSent,
+    tempPassword: plainPassword,
     // In dev mode, expose the Ethereal preview URL so admin can view the email & see the exact password.
     ...(config.isDev && emailPreviewUrl ? { emailPreviewUrl } : {}),
   });
@@ -305,10 +309,11 @@ const resendWelcomeEmail = asyncHandler(async (req, res) => {
 
   const message = emailSent
     ? 'Welcome email resent successfully.'
-    : 'Password reset but email delivery failed. Please try again.';
+    : 'Password reset, but email delivery failed. Share the temporary password below directly.';
 
   return ApiResponse.ok(res, message, {
     emailSent,
+    tempPassword: newPlainPassword,
     ...(config.isDev && emailPreviewUrl ? { emailPreviewUrl } : {}),
   });
 });
