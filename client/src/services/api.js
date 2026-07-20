@@ -4,7 +4,7 @@ import axios from 'axios';
 // (withCredentials) and the response interceptor surfaces a consistent error
 // message + forces re-login on session expiry.
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
   timeout: 20000,
   headers: { 'Content-Type': 'application/json' },
