@@ -62,6 +62,9 @@ async function getTransporter() {
     connectionTimeout: 8000,
     greetingTimeout: 8000,
     socketTimeout: 8000,
+    // Force IPv4 — the hosting network has no IPv6 route, and Gmail's SMTP
+    // host resolves to an IPv6 address by default, causing ENETUNREACH.
+    family: 4,
   });
 
   return _transporter;
