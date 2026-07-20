@@ -31,10 +31,16 @@ module.exports = {
 
   // Database — in development always use local MongoDB to avoid SRV/DNS
   // issues with cloud Atlas URIs on some networks. Only production reads
-  // MONGODB_URI from the environment.
-  mongoUri: isProd
-    ? env('MONGODB_URI', 'mongodb://127.0.0.1:27017/classic_express_erp')
-    : 'mongodb://127.0.0.1:27017/classic_express_erp',
+  // MONGODB_URI from the environment, and fails fast if it's missing rather
+  // than silently trying an unreachable localhost URI.
+  mongoUri: (() => {
+    if (!isProd) return 'mongodb://127.0.0.1:27017/classic_express_erp';
+    const uri = env('MONGODB_URI');
+    if (!uri) {
+      throw new Error('MONGODB_URI environment variable must be set when NODE_ENV=production');
+    }
+    return uri;
+  })(),
 
   // JWT
   jwt: {
